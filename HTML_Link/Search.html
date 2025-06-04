@@ -1,0 +1,258 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <title>JR経路探索 (Web版)</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; line-height: 1.6; }
+        .container { max-width: 700px; margin: auto; padding: 20px; border: 1px solid #ddd; border-radius: 8px; }
+        label { display: inline-block; margin-bottom: 5px; }
+        input[type="text"] { width: 150px; padding: 8px; margin-right: 10px; margin-bottom: 10px; border: 1px solid #ccc; border-radius: 4px;}
+        button { padding: 10px 15px; background-color: #007bff; color: white; border: none; border-radius: 4px; cursor: pointer; }
+        button:hover { background-color: #0056b3; }
+        #results { margin-top: 20px; padding: 10px; border: 1px dashed #ccc; background-color: #f9f9f9; min-height: 50px; }
+        .error { color: red; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>JR経路探索</h1>
+        <div>
+            <label for="startStation">出発駅:</label>
+            <input type="text" id="startStation" placeholder="例: 東京">
+            <label for="endStation">到着駅:</label>
+            <input type="text" id="endStation" placeholder="例: 横浜">
+            <button id="searchButton">経路検索</button>
+        </div>
+        <div id="results">
+            結果はここに表示されます。
+        </div>
+    </div>
+
+    <script>
+        // グローバル変数 (必要に応じて)
+        let graph = {}; // {駅A: {駅B: [{cost: C, line: L}, ...], ...}}
+        let allNodes = new Set(); // 全駅名のセット
+
+        // ★★★ ご自身のGitHub上のCSVファイルのRaw URLに置き換えてください ★★★
+        // 例: 'https://raw.githubusercontent.com/YOUR_USERNAME/YOUR_REPOSITORY/main/jr_routes_with_line.csv'
+        const csvFileUrl = 'YOUR_RAW_CSV_URL_ON_GITHUB'; 
+
+        // --- 1. CSV読み込みとグラフ構築 (JavaScriptで実装) ---
+        async function loadGraphData() {
+            document.getElementById('results').textContent = '路線データを読み込み中です...';
+            try {
+                const response = await fetch(csvFileUrl);
+                if (!response.ok) {
+                    throw new Error(`CSVファイルの取得に失敗しました: ${response.status} ${response.statusText}`);
+                }
+                const csvText = await response.text();
+                
+                // CSVテキストをパースしてグラフを構築 (Pythonの create_graph_from_csv_with_line 相当)
+                graph = {}; // 初期化
+                allNodes = new Set(); // 初期化
+
+                const rows = csvText.trim().split('\n');
+                const headers = rows[0].trim().split(',').map(h => h.trim());
+                // 必要なヘッダーがあるか確認
+                const expectedHeaders = ['station1', 'station2', 'cost', 'line_name'];
+                if (!expectedHeaders.every(h => headers.includes(h))) {
+                    throw new Error(`CSVのヘッダーが正しくありません。必要な列: ${expectedHeaders.join(', ')}`);
+                }
+
+                for (let i = 1; i < rows.length; i++) {
+                    const values = rows[i].trim().split(',');
+                    if (values.length !== headers.length) continue; // 行の列数がヘッダーと違う場合はスキップ
+
+                    const rowData = {};
+                    headers.forEach((header, index) => {
+                        rowData[header] = values[index].trim();
+                    });
+
+                    const station1 = rowData.station1;
+                    const station2 = rowData.station2;
+                    const cost = parseFloat(rowData.cost);
+                    const lineName = rowData.line_name;
+
+                    if (!station1 || !station2 || isNaN(cost) || cost < 0 || !lineName) {
+                        console.warn(`Skipping invalid row: ${rows[i]}`);
+                        continue;
+                    }
+
+                    const edgeInfo = { cost: cost, line: lineName };
+
+                    // station1 -> station2
+                    if (!graph[station1]) graph[station1] = {};
+                    if (!graph[station1][station2]) graph[station1][station2] = [];
+                    graph[station1][station2].push({...edgeInfo}); // copy
+                    allNodes.add(station1);
+
+                    // station2 -> station1 (無向グラフ)
+                    if (!graph[station2]) graph[station2] = {};
+                    if (!graph[station2][station1]) graph[station2][station1] = [];
+                    graph[station2][station1].push({...edgeInfo}); // copy
+                    allNodes.add(station2);
+                }
+                document.getElementById('results').textContent = '路線データの読み込み完了。駅を入力して検索してください。';
+                console.log("Graph data loaded:", graph);
+                console.log("All nodes:", allNodes);
+
+            } catch (error) {
+                document.getElementById('results').innerHTML = `<span class="error">エラー: ${error.message}</span>`;
+                console.error("Failed to load or parse CSV:", error);
+            }
+        }
+
+        // --- 2. ダイクストラ法の実装 (JavaScriptで実装) ---
+        // (Pythonの dijkstra_algorithm_with_line_info 相当のロジック)
+        // この部分は長くなるので、骨子のみ示します。
+        // 優先度付きキューの実装が鍵となります。
+        // 簡単なものは配列とソートで代用できますが、効率は良くありません。
+        class SimplePriorityQueue { // 簡易的な優先度付きキュー (効率は最適ではない)
+            constructor() { this._elements = []; }
+            enqueue(element, priority) { this._elements.push({ element, priority }); this._elements.sort((a, b) => a.priority - b.priority); }
+            dequeue() { return this._elements.shift().element; }
+            isEmpty() { return this._elements.length === 0; }
+        }
+
+        function dijkstra(startNode, endNode) {
+            if (!allNodes.has(startNode) || !allNodes.has(endNode)) {
+                return { pathDetails: null, totalCost: Infinity };
+            }
+
+            const distances = {};
+            const prevSegments = {}; // {node: {fromNode, line, costSegment}}
+            const pq = new SimplePriorityQueue();
+
+            allNodes.forEach(node => distances[node] = Infinity);
+            distances[startNode] = 0;
+            pq.enqueue(startNode, 0);
+
+            while (!pq.isEmpty()) {
+                const currentNode = pq.dequeue();
+
+                if (currentNode === endNode) break; // 目的地に到達
+                if (!graph[currentNode]) continue; // このノードから出るエッジがない
+
+                for (const neighbor in graph[currentNode]) {
+                    if (!allNodes.has(neighbor)) continue;
+
+                    graph[currentNode][neighbor].forEach(edge => {
+                        const newCost = distances[currentNode] + edge.cost;
+                        if (newCost < distances[neighbor]) {
+                            distances[neighbor] = newCost;
+                            prevSegments[neighbor] = {
+                                fromNode: currentNode,
+                                line: edge.line,
+                                costSegment: edge.cost
+                            };
+                            pq.enqueue(neighbor, newCost);
+                        }
+                    });
+                }
+            }
+
+            if (distances[endNode] === Infinity) {
+                return { pathDetails: null, totalCost: Infinity };
+            }
+
+            // 経路復元
+            const path = [];
+            let curr = endNode;
+            if (startNode === endNode) return { pathDetails: [], totalCost: 0 }; // 始点と終点が同じ
+
+            while (curr !== startNode && prevSegments[curr]) {
+                const segment = prevSegments[curr];
+                path.unshift({
+                    from: segment.fromNode,
+                    to: curr,
+                    line: segment.line,
+                    cost: segment.costSegment
+                });
+                curr = segment.fromNode;
+            }
+            
+            if (path.length === 0 && startNode !== endNode) return { pathDetails: null, totalCost: Infinity }; // 経路不整合
+
+            return { pathDetails: path, totalCost: distances[endNode] };
+        }
+
+        // --- 3. 経路表示の整形 (JavaScriptで実装) ---
+        // (Pythonのメイン部分の経路表示と、連続路線まとめロジック相当)
+        function formatAndDisplayPath(pathDetails, totalCost, startStation, endStation) {
+            const resultsDiv = document.getElementById('results');
+            if (totalCost === Infinity) {
+                resultsDiv.innerHTML = `<span class="error">始点「${startStation}」から終点「${endStation}」への経路は見つかりませんでした。</span>`;
+                return;
+            }
+            if (startStation === endStation && totalCost === 0) {
+                resultsDiv.innerHTML = `経路: ${startStation}<br>総コスト: ${totalCost.toFixed(1)} km`;
+                return;
+            }
+            if (!pathDetails || pathDetails.length === 0) {
+                 resultsDiv.innerHTML = `<span class="error">経路情報がありません。</span>`;
+                 return;
+            }
+
+            // 連続する同じ路線をまとめる処理
+            const condensedPath = [];
+            if (pathDetails.length > 0) {
+                let currentSegment = { ...pathDetails[0] }; // Shallow copy
+                for (let i = 1; i < pathDetails.length; i++) {
+                    const next = pathDetails[i];
+                    if (next.line === currentSegment.line) {
+                        currentSegment.to = next.to;
+                        currentSegment.cost += next.cost;
+                    } else {
+                        condensedPath.push(currentSegment);
+                        currentSegment = { ...next }; // Shallow copy
+                    }
+                }
+                condensedPath.push(currentSegment);
+            }
+            
+            let pathStr = condensedPath[0].from;
+            for (const segment of condensedPath) {
+                pathStr += ` ー(${segment.line}, ${segment.cost.toFixed(1)} km)→ ${segment.to}`;
+            }
+
+            resultsDiv.innerHTML = `経路: ${pathStr}<br>総コスト: ${totalCost.toFixed(1)} km`;
+        }
+
+        // --- 4. イベントリスナーとメイン処理 ---
+        document.addEventListener('DOMContentLoaded', () => {
+            loadGraphData(); // ページ読み込み時にCSVデータをロード
+
+            const startInput = document.getElementById('startStation');
+            const endInput = document.getElementById('endStation');
+            const searchBtn = document.getElementById('searchButton');
+            const resultsDiv = document.getElementById('results');
+
+            searchBtn.addEventListener('click', () => {
+                const start = startInput.value.trim();
+                const end = endInput.value.trim();
+
+                if (!start || !end) {
+                    resultsDiv.innerHTML = `<span class="error">出発駅と到着駅の両方を入力してください。</span>`;
+                    return;
+                }
+                if (!allNodes.has(start)) {
+                    resultsDiv.innerHTML = `<span class="error">出発駅「${start}」は路線データに存在しません。</span>`;
+                    return;
+                }
+                if (!allNodes.has(end)) {
+                    resultsDiv.innerHTML = `<span class="error">到着駅「${end}」は路線データに存在しません。</span>`;
+                    return;
+                }
+
+                resultsDiv.textContent = '経路を探索中です...';
+                // 少し遅延させてUIの更新を確実にする（実際には探索処理が非同期ではないので効果は限定的）
+                setTimeout(() => { 
+                    const result = dijkstra(start, end);
+                    formatAndDisplayPath(result.pathDetails, result.totalCost, start, end);
+                }, 10); 
+            });
+        });
+    </script>
+</body>
+</html>
