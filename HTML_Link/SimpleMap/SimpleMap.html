@@ -2,79 +2,164 @@
 <html lang="ja">
 <head>
     <meta charset="UTF-8">
-    <title>Simple Map Viewer</title>
+    <title>Simple Map Viewer with Zoom Buttons</title>
     <style>
         /* CSSは後述します */
         body {
             margin: 0;
-            overflow: hidden; /* ページ全体のスクロールバーを非表示に */
-            background-color: #333; /* 地図の背景色 */
+            overflow: hidden;
+            background-color: #333;
         }
         #map-viewport {
-            width: 100vw; /* ビューポートを画面幅いっぱいに */
-            height: 100vh; /* ビューポートを画面高さいっぱいに */
-            overflow: hidden; /* はみ出した画像部分を隠す */
-            position: relative; /* 画像の位置指定の基準点 */
-            cursor: grab; /* ドラッグ可能なカーソル */
+            width: 100vw;
+            height: 100vh;
+            overflow: hidden;
+            position: relative;
+            cursor: grab;
         }
         #map-image {
-            position: absolute; /* ビューポート内で絶対位置指定 */
-            transform-origin: 0 0; /* 拡大・縮小の基準点を左上隅に */
-            will-change: transform; /* 描画パフォーマンス向上のヒント */
-            /* 初期位置とスケールはJavaScriptで設定 */
+            position: absolute;
+            transform-origin: 0 0;
+            will-change: transform;
         }
+
+        /* --- ズームコントロールのスタイル --- */
+        #zoom-controls {
+            position: absolute;
+            bottom: 20px;
+            right: 20px;
+            display: flex;
+            flex-direction: column; /* ボタンを縦に並べる */
+            z-index: 1000; /* 地図画像より手前に表示 */
+        }
+        #zoom-controls button {
+            background-color: rgba(255, 255, 255, 0.9);
+            border: 1px solid #aaa;
+            color: #333;
+            font-size: 20px;
+            font-weight: bold;
+            width: 44px;  /* サイズ調整 */
+            height: 44px; /* サイズ調整 */
+            margin-bottom: 8px;
+            cursor: pointer;
+            border-radius: 5px; /* 角を丸く */
+            box-shadow: 0 2px 5px rgba(0,0,0,0.15);
+            transition: background-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out;
+            display: flex; /* アイコンを中央に配置するため */
+            align-items: center;
+            justify-content: center;
+        }
+        #zoom-controls button:hover {
+            background-color: white;
+            box-shadow: 0 3px 7px rgba(0,0,0,0.2);
+        }
+        #zoom-controls button:active {
+            background-color: #f0f0f0;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        }
+        /* --- ここまでズームコントロールのスタイル --- */
+
     </style>
 </head>
 <body>
     <div id="map-viewport">
         <img id="map-image" src="./JapanRailmap.jpg" alt="地図画像">
-    </div>
+        
+        <div id="zoom-controls">
+            <button id="zoom-in-button" title="ズームイン">+</button>
+            <button id="zoom-out-button" title="ズームアウト">-</button>
+        </div>
+        </div>
 
     <script>
-      
+
 const viewport = document.getElementById('map-viewport');
 const mapImage = document.getElementById('map-image');
+const zoomInButton = document.getElementById('zoom-in-button');   // 追加
+const zoomOutButton = document.getElementById('zoom-out-button'); // 追加
 
-let currentScale = 1.0; // 現在のスケール
-let minScale = 0.1;    // 最小スケール
-let maxScale = 5.0;    // 最大スケール
+let currentScale = 1.0;
+let minScale = 0.1;
+let maxScale = 5.0;
+const zoomStepFactor = 0.2; // ボタン1押しでのスケール変化率 (20%)
 
-// 画像の初期位置 (ビューポートの中央に画像の中心が来るように調整することも可能)
 let posX = 0;
 let posY = 0;
 
-// ドラッグによるパンニングのための状態変数
 let isDragging = false;
 let startDragX = 0;
 let startDragY = 0;
 
-// 画像が読み込まれたら初期設定を行う
 mapImage.onload = () => {
-    // 例: 画像をビューポートの中央に配置する
-     posX = (viewport.offsetWidth - mapImage.offsetWidth * currentScale) / 2;
-     posY = (viewport.offsetHeight - mapImage.offsetHeight * currentScale) / 2;
+    // 画像の初期アスペクト比を保ちつつビューポートにフィットさせる例
+    const viewportAspect = viewport.offsetWidth / viewport.offsetHeight;
+    const imageAspect = mapImage.naturalWidth / mapImage.naturalHeight;
+
+    if (imageAspect > viewportAspect) { // 画像が横長
+        currentScale = viewport.offsetWidth / mapImage.naturalWidth;
+    } else { // 画像が縦長または正方形
+        currentScale = viewport.offsetHeight / mapImage.naturalHeight;
+    }
+    // 最小スケールを初期スケールより小さく設定する場合など調整
+    minScale = Math.min(0.1, currentScale / 2); // 例: 初期スケールの半分を最小値の一つとしてみる
+
+    posX = (viewport.offsetWidth - mapImage.naturalWidth * currentScale) / 2;
+    posY = (viewport.offsetHeight - mapImage.naturalHeight * currentScale) / 2;
     updateImageTransform();
 };
-if (mapImage.complete) { // 画像が既にキャッシュされている場合
+if (mapImage.complete) {
     mapImage.onload();
 }
 
-
 function updateImageTransform() {
-    // 境界チェック (画像が画面外に完全に出ないようにするなど、必要に応じて実装)
-    // posX = Math.min(0, Math.max(viewport.offsetWidth - mapImage.offsetWidth * currentScale, posX));
-    // posY = Math.min(0, Math.max(viewport.offsetHeight - mapImage.offsetHeight * currentScale, posY));
+    // 境界チェックの例 (画像が完全にビューポートの外に出ないようにする)
+    // X軸の制限
+    const maxPosX = viewport.offsetWidth - (mapImage.naturalWidth * currentScale * 0.1); // 画像の10%は見えるように
+    const minPosX = mapImage.naturalWidth * currentScale * 0.9 * -1;
+    // Y軸の制限
+    const maxPosY = viewport.offsetHeight - (mapImage.naturalHeight * currentScale * 0.1);
+    const minPosY = mapImage.naturalHeight * currentScale * 0.9 * -1;
     
+    // 完全に画面外に出ないように（ただし、画像がビューポートより小さい場合は中央に寄せるなどの考慮が必要）
+    if (mapImage.naturalWidth * currentScale > viewport.offsetWidth) {
+        posX = Math.min(0, Math.max(viewport.offsetWidth - mapImage.naturalWidth * currentScale, posX));
+    } else { // 画像がビューポート幅より小さい場合は中央寄せ
+        posX = (viewport.offsetWidth - mapImage.naturalWidth * currentScale) / 2;
+    }
+    if (mapImage.naturalHeight * currentScale > viewport.offsetHeight) {
+        posY = Math.min(0, Math.max(viewport.offsetHeight - mapImage.naturalHeight * currentScale, posY));
+    } else { // 画像がビューポート高より小さい場合は中央寄せ
+        posY = (viewport.offsetHeight - mapImage.naturalHeight * currentScale) / 2;
+    }
+
     mapImage.style.transform = `translate(${posX}px, ${posY}px) scale(${currentScale})`;
 }
 
-// --- パンニング (ドラッグ移動) の実装 ---
+// --- ズーム処理の共通関数 ---
+function applyZoom(scaleChangeFactor, zoomCenterX, zoomCenterY) {
+    // zoomCenterX, zoomCenterY はビューポートの左上を原点とする座標
+
+    const pointX = (zoomCenterX - posX) / currentScale; // ズーム中心の画像上の相対X座標
+    const pointY = (zoomCenterY - posY) / currentScale; // ズーム中心の画像上の相対Y座標
+
+    let newScale = currentScale * (1 + scaleChangeFactor); // 乗算でスケール変更
+    newScale = Math.max(minScale, Math.min(maxScale, newScale));
+
+    // スケール変更後も、ズーム中心が同じビューポート座標に来るようにposX, posYを調整
+    posX = zoomCenterX - pointX * newScale;
+    posY = zoomCenterY - pointY * newScale;
+    currentScale = newScale;
+
+    updateImageTransform();
+}
+
+// --- パンニング (ドラッグ移動) の実装 (変更なし) ---
 viewport.addEventListener('mousedown', (e) => {
-    e.preventDefault(); // 画像のドラッグなど、ブラウザのデフォルト動作を抑制
+    e.preventDefault();
     isDragging = true;
-    startDragX = e.clientX - posX; // マウス位置と画像のオフセットを記録
+    startDragX = e.clientX - posX;
     startDragY = e.clientY - posY;
-    viewport.style.cursor = 'grabbing'; // ドラッグ中のカーソル
+    viewport.style.cursor = 'grabbing';
 });
 
 viewport.addEventListener('mousemove', (e) => {
@@ -92,43 +177,42 @@ viewport.addEventListener('mouseup', () => {
     }
 });
 
-viewport.addEventListener('mouseleave', () => { // マウスがビューポート外に出た場合
+viewport.addEventListener('mouseleave', () => {
     if (isDragging) {
         isDragging = false;
         viewport.style.cursor = 'grab';
     }
 });
 
-// --- ズーム (マウスホイール) の実装 ---
+// --- ズーム (マウスホイール) の実装 (共通関数を呼び出すように変更) ---
 viewport.addEventListener('wheel', (e) => {
-    e.preventDefault(); // ページのスクロールを抑制
+    e.preventDefault();
 
-    const zoomIntensity = 0.1;
-    const wheelDelta = e.deltaY < 0 ? 1 : -1; // ホイールの回転方向
-
-    // マウスカーソル位置を基準にズームするための計算
     const rect = viewport.getBoundingClientRect();
-    // マウスカーソルのビューポート内座標 (左上原点)
     const mouseX = e.clientX - rect.left;
     const mouseY = e.clientY - rect.top;
+    
+    const scaleIncrement = e.deltaY < 0 ? zoomStepFactor : -zoomStepFactor; // ホイール方向で増減
+    
+    applyZoom(scaleIncrement, mouseX, mouseY);
+});
 
-    // マウスカーソル位置に対応する、現在のスケールでの画像上の点
-    const pointX = (mouseX - posX) / currentScale;
-    const pointY = (mouseY - posY) / currentScale;
+// --- ズームボタンのイベントリスナー ---
+zoomInButton.addEventListener('click', () => {
+    const centerX = viewport.offsetWidth / 2;  // ビューポート中心をズーム中心に
+    const centerY = viewport.offsetHeight / 2;
+    applyZoom(zoomStepFactor, centerX, centerY);
+});
 
-    // 新しいスケールを計算
-    currentScale += wheelDelta * zoomIntensity * currentScale; // スケールが大きいほど変化量も大きく
-    currentScale = Math.max(minScale, Math.min(maxScale, currentScale)); // 最小・最大スケール制限
-
-    // 新しいスケールで、先ほどの画像上の点が同じマウスカーソル位置に来るように画像の左上座標 (posX, posY) を調整
-    posX = mouseX - pointX * currentScale;
-    posY = mouseY - pointY * currentScale;
-
-    updateImageTransform();
+zoomOutButton.addEventListener('click', () => {
+    const centerX = viewport.offsetWidth / 2; // ビューポート中心をズーム中心に
+    const centerY = viewport.offsetHeight / 2;
+    applyZoom(-zoomStepFactor, centerX, centerY); // 負の値でズームアウト
 });
 
 // 初期表示
-updateImageTransform();
+// mapImage.onload が非同期なので、確実にサイズ取得後に updateImageTransform が呼ばれるようにする
+// (onload 内で初期呼び出し済み)
     </script>
 </body>
 </html>
