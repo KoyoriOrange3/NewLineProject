@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <title>Simple Map Viewer</title>
+    <style>
+        /* CSSは後述します */
+        body {
+            margin: 0;
+            overflow: hidden; /* ページ全体のスクロールバーを非表示に */
+            background-color: #333; /* 地図の背景色 */
+        }
+        #map-viewport {
+            width: 100vw; /* ビューポートを画面幅いっぱいに */
+            height: 100vh; /* ビューポートを画面高さいっぱいに */
+            overflow: hidden; /* はみ出した画像部分を隠す */
+            position: relative; /* 画像の位置指定の基準点 */
+            cursor: grab; /* ドラッグ可能なカーソル */
+        }
+        #map-image {
+            position: absolute; /* ビューポート内で絶対位置指定 */
+            transform-origin: 0 0; /* 拡大・縮小の基準点を左上隅に */
+            will-change: transform; /* 描画パフォーマンス向上のヒント */
+            /* 初期位置とスケールはJavaScriptで設定 */
+        }
+    </style>
+</head>
+<body>
+    <div id="map-viewport">
+        <img id="map-image" src="./JapanRailmap.jpg" alt="地図画像">
+    </div>
+
+    <script>
+      
+const viewport = document.getElementById('map-viewport');
+const mapImage = document.getElementById('map-image');
+
+let currentScale = 1.0; // 現在のスケール
+let minScale = 0.1;    // 最小スケール
+let maxScale = 5.0;    // 最大スケール
+
+// 画像の初期位置 (ビューポートの中央に画像の中心が来るように調整することも可能)
+let posX = 0;
+let posY = 0;
+
+// ドラッグによるパンニングのための状態変数
+let isDragging = false;
+let startDragX = 0;
+let startDragY = 0;
+
+// 画像が読み込まれたら初期設定を行う
+mapImage.onload = () => {
+    // 例: 画像をビューポートの中央に配置する (任意)
+    // posX = (viewport.offsetWidth - mapImage.offsetWidth * currentScale) / 2;
+    // posY = (viewport.offsetHeight - mapImage.offsetHeight * currentScale) / 2;
+    updateImageTransform();
+};
+if (mapImage.complete) { // 画像が既にキャッシュされている場合
+    mapImage.onload();
+}
+
+
+function updateImageTransform() {
+    // 境界チェック (画像が画面外に完全に出ないようにするなど、必要に応じて実装)
+    // 例: posX = Math.min(0, Math.max(viewport.offsetWidth - mapImage.offsetWidth * currentScale, posX));
+    //     posY = Math.min(0, Math.max(viewport.offsetHeight - mapImage.offsetHeight * currentScale, posY));
+    
+    mapImage.style.transform = `translate(${posX}px, ${posY}px) scale(${currentScale})`;
+}
+
+// --- パンニング (ドラッグ移動) の実装 ---
+viewport.addEventListener('mousedown', (e) => {
+    e.preventDefault(); // 画像のドラッグなど、ブラウザのデフォルト動作を抑制
+    isDragging = true;
+    startDragX = e.clientX - posX; // マウス位置と画像のオフセットを記録
+    startDragY = e.clientY - posY;
+    viewport.style.cursor = 'grabbing'; // ドラッグ中のカーソル
+});
+
+viewport.addEventListener('mousemove', (e) => {
+    if (!isDragging) return;
+    e.preventDefault();
+    posX = e.clientX - startDragX;
+    posY = e.clientY - startDragY;
+    updateImageTransform();
+});
+
+viewport.addEventListener('mouseup', () => {
+    if (isDragging) {
+        isDragging = false;
+        viewport.style.cursor = 'grab';
+    }
+});
+
+viewport.addEventListener('mouseleave', () => { // マウスがビューポート外に出た場合
+    if (isDragging) {
+        isDragging = false;
+        viewport.style.cursor = 'grab';
+    }
+});
+
+// --- ズーム (マウスホイール) の実装 ---
+viewport.addEventListener('wheel', (e) => {
+    e.preventDefault(); // ページのスクロールを抑制
+
+    const zoomIntensity = 0.1;
+    const wheelDelta = e.deltaY < 0 ? 1 : -1; // ホイールの回転方向
+
+    // マウスカーソル位置を基準にズームするための計算
+    const rect = viewport.getBoundingClientRect();
+    // マウスカーソルのビューポート内座標 (左上原点)
+    const mouseX = e.clientX - rect.left;
+    const mouseY = e.clientY - rect.top;
+
+    // マウスカーソル位置に対応する、現在のスケールでの画像上の点
+    const pointX = (mouseX - posX) / currentScale;
+    const pointY = (mouseY - posY) / currentScale;
+
+    // 新しいスケールを計算
+    currentScale += wheelDelta * zoomIntensity * currentScale; // スケールが大きいほど変化量も大きく
+    currentScale = Math.max(minScale, Math.min(maxScale, currentScale)); // 最小・最大スケール制限
+
+    // 新しいスケールで、先ほどの画像上の点が同じマウスカーソル位置に来るように画像の左上座標 (posX, posY) を調整
+    posX = mouseX - pointX * currentScale;
+    posY = mouseY - pointY * currentScale;
+
+    updateImageTransform();
+});
+
+// 初期表示
+updateImageTransform();
+    </script>
+</body>
+</html>
