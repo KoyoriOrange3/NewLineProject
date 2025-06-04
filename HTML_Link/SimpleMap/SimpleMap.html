@@ -62,8 +62,8 @@ if (mapImage.complete) { // 画像が既にキャッシュされている場合
 
 function updateImageTransform() {
     // 境界チェック (画像が画面外に完全に出ないようにするなど、必要に応じて実装)
-    posX = Math.min(0, Math.max(viewport.offsetWidth - mapImage.offsetWidth * currentScale, posX));
-    posY = Math.min(0, Math.max(viewport.offsetHeight - mapImage.offsetHeight * currentScale, posY));
+    // posX = Math.min(0, Math.max(viewport.offsetWidth - mapImage.offsetWidth * currentScale, posX));
+    // posY = Math.min(0, Math.max(viewport.offsetHeight - mapImage.offsetHeight * currentScale, posY));
     
     mapImage.style.transform = `translate(${posX}px, ${posY}px) scale(${currentScale})`;
 }
