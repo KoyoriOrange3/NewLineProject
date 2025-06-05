@@ -2,13 +2,12 @@
 <html lang="ja">
 <head>
     <meta charset="UTF-8">
-    <title>Simple Map Viewer</title>
+    <title>Tiled Map Viewer</title>
     <style>
-        /* CSSは後述します */
         body {
             margin: 0;
             overflow: hidden;
-            background-color: #FFF;
+            background-color: #333;
         }
         #map-viewport {
             width: 100vw;
@@ -17,20 +16,28 @@
             position: relative;
             cursor: grab;
         }
-        #map-image {
+        /* タイル群をまとめる親コンテナ */
+        #map-tiles-container {
             position: absolute;
-            transform-origin: 0 0;
+            transform-origin: 0 0; /* スケール・移動の基準点を左上隅に */
             will-change: transform;
+            /* 幅と高さはJavaScriptで、全タイルの合計サイズに基づいて設定されます */
+        }
+        /* 個々のタイル画像 */
+        .map-tile {
+            position: absolute; /* 親コンテナ内で絶対位置指定 */
+            /* 隙間ができないように、borderやpaddingは0に */
+            border: none;
+            padding: 0;
         }
 
-        /* --- ズームコントロールのスタイル --- */
         #zoom-controls {
             position: absolute;
             bottom: 20px;
             right: 20px;
             display: flex;
-            flex-direction: column; /* ボタンを縦に並べる */
-            z-index: 1000; /* 地図画像より手前に表示 */
+            flex-direction: column;
+            z-index: 1000;
         }
         #zoom-controls button {
             background-color: rgba(255, 255, 255, 0.9);
@@ -38,14 +45,14 @@
             color: #333;
             font-size: 20px;
             font-weight: bold;
-            width: 44px;  /* サイズ調整 */
-            height: 44px; /* サイズ調整 */
+            width: 44px;
+            height: 44px;
             margin-bottom: 8px;
             cursor: pointer;
-            border-radius: 5px; /* 角を丸く */
+            border-radius: 5px;
             box-shadow: 0 2px 5px rgba(0,0,0,0.15);
             transition: background-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out;
-            display: flex; /* アイコンを中央に配置するため */
+            display: flex;
             align-items: center;
             justify-content: center;
         }
@@ -57,31 +64,44 @@
             background-color: #f0f0f0;
             box-shadow: 0 1px 3px rgba(0,0,0,0.1);
         }
-        /* --- ここまでズームコントロールのスタイル --- */
-
     </style>
 </head>
 <body>
     <div id="map-viewport">
-        <img id="map-image" src="./path60000.jpg" alt="地図画像">
-        
+        <div id="map-tiles-container">
+            </div>
         <div id="zoom-controls">
             <button id="zoom-in-button" title="ズームイン">+</button>
             <button id="zoom-out-button" title="ズームアウト">-</button>
         </div>
-        </div>
+    </div>
 
     <script>
+        const viewport = document.getElementById('map-viewport');
+const tilesContainer = document.getElementById('map-tiles-container'); // 変更
+const zoomInButton = document.getElementById('zoom-in-button');
+const zoomOutButton = document.getElementById('zoom-out-button');
 
-const viewport = document.getElementById('map-viewport');
-const mapImage = document.getElementById('map-image');
-const zoomInButton = document.getElementById('zoom-in-button');   // 追加
-const zoomOutButton = document.getElementById('zoom-out-button'); // 追加
+// --- ▼▼▼ タイル設定 (ご自身の分割に合わせて変更してください) ▼▼▼ ---
+const TILE_ROWS = 4; // 例: 2行
+const TILE_COLS = 2; // 例: 4列 (合計8タイル)
+const TILE_WIDTH_PX = 5406; // 例: 各タイルの幅 (ピクセル)
+const TILE_HEIGHT_PX = 4944; // 例: 各タイルの高さ (ピクセル)
+const TILE_FILENAME_PREFIX = 'tile_'; // 例: 'map_tile_' など
+const TILE_FILENAME_EXTENSION = '.jpg'; // 例: '.png'
+
+// 全体の仮想的な画像の幅と高さ
+const TOTAL_IMAGE_WIDTH = TILE_COLS * TILE_WIDTH_PX;
+const TOTAL_IMAGE_HEIGHT = TILE_ROWS * TILE_HEIGHT_PX;
+// --- ▲▲▲ タイル設定ここまで ▲▲▲ ---
+
+tilesContainer.style.width = `${TOTAL_IMAGE_WIDTH}px`;
+tilesContainer.style.height = `${TOTAL_IMAGE_HEIGHT}px`;
 
 let currentScale = 1.0;
-let minScale = 0.1;
-let maxScale = 5.0;
-const zoomStepFactor = 0.2; // ボタン1押しでのスケール変化率 (20%)
+let minScale = 0.05; // 最小スケール (調整可能)
+let maxScale = 3.0;  // 最大スケール (調整可能)
+const zoomStepFactor = 0.2;
 
 let posX = 0;
 let posY = 0;
@@ -90,67 +110,86 @@ let isDragging = false;
 let startDragX = 0;
 let startDragY = 0;
 
-mapImage.onload = () => {
-    // 画像の初期アスペクト比を保ちつつビューポートにフィットさせる例
+let tilesLoadedCount = 0;
+const totalTilesToLoad = TILE_ROWS * TILE_COLS;
+
+// --- タイル画像の読み込みと配置 ---
+for (let r = 0; r < TILE_ROWS; r++) {
+    for (let c = 0; c < TILE_COLS; c++) {
+        const tileImage = new Image();
+        // 命名規則に従ってファイルパスを生成 (例: tile_0_0.jpg, tile_0_1.jpg ...)
+        tileImage.src = `${TILE_FILENAME_PREFIX}${r}_${c}${TILE_FILENAME_EXTENSION}`;
+        tileImage.className = 'map-tile';
+        tileImage.style.left = `${c * TILE_WIDTH_PX}px`;
+        tileImage.style.top = `${r * TILE_HEIGHT_PX}px`;
+        tileImage.style.width = `${TILE_WIDTH_PX}px`;
+        tileImage.style.height = `${TILE_HEIGHT_PX}px`;
+        
+        tileImage.onload = () => {
+            tilesLoadedCount++;
+            if (tilesLoadedCount === totalTilesToLoad) {
+                console.log("All tiles loaded.");
+                initializeMapDisplay(); // 全タイル読み込み完了後に初期表示
+            }
+        };
+        tileImage.onerror = () => {
+            console.error(`Error loading tile: ${tileImage.src}`);
+            tilesLoadedCount++; // エラーでもカウントを進め、初期表示が呼ばれるようにする
+            if (tilesLoadedCount === totalTilesToLoad) {
+                initializeMapDisplay();
+            }
+        };
+        tilesContainer.appendChild(tileImage);
+    }
+}
+
+function initializeMapDisplay() {
     const viewportAspect = viewport.offsetWidth / viewport.offsetHeight;
-    const imageAspect = mapImage.naturalWidth / mapImage.naturalHeight;
+    const imageAspect = TOTAL_IMAGE_WIDTH / TOTAL_IMAGE_HEIGHT;
 
-    if (imageAspect > viewportAspect) { // 画像が横長
-        currentScale = viewport.offsetWidth / mapImage.naturalWidth;
-    } else { // 画像が縦長または正方形
-        currentScale = viewport.offsetHeight / mapImage.naturalHeight;
+    if (imageAspect > viewportAspect) { // 全体画像がビューポートより横長
+        currentScale = viewport.offsetWidth / TOTAL_IMAGE_WIDTH;
+    } else { // 全体画像がビューポートより縦長または正方形
+        currentScale = viewport.offsetHeight / TOTAL_IMAGE_HEIGHT;
     }
-    // 最小スケールを初期スケールより小さく設定する場合など調整
-    minScale = Math.min(0.1, currentScale / 2); // 例: 初期スケールの半分を最小値の一つとしてみる
+    // minScaleは初期スケールより小さく設定しても良い
+    minScale = Math.min(0.1, currentScale / 2); 
 
-    posX = (viewport.offsetWidth - mapImage.naturalWidth * currentScale) / 2;
-    posY = (viewport.offsetHeight - mapImage.naturalHeight * currentScale) / 2;
-    updateImageTransform();
-};
-if (mapImage.complete) {
-    mapImage.onload();
+    posX = (viewport.offsetWidth - TOTAL_IMAGE_WIDTH * currentScale) / 2;
+    posY = (viewport.offsetHeight - TOTAL_IMAGE_HEIGHT * currentScale) / 2;
+    updateTilesContainerTransform();
 }
 
-function updateImageTransform() {
-    // 境界チェックの例 (画像が完全にビューポートの外に出ないようにする)
-    // X軸の制限
-    const maxPosX = viewport.offsetWidth - (mapImage.naturalWidth * currentScale * 0.1); // 画像の10%は見えるように
-    const minPosX = mapImage.naturalWidth * currentScale * 0.9 * -1;
-    // Y軸の制限
-    const maxPosY = viewport.offsetHeight - (mapImage.naturalHeight * currentScale * 0.1);
-    const minPosY = mapImage.naturalHeight * currentScale * 0.9 * -1;
-    
-    // 完全に画面外に出ないように（ただし、画像がビューポートより小さい場合は中央に寄せるなどの考慮が必要）
-    if (mapImage.naturalWidth * currentScale > viewport.offsetWidth) {
-        posX = Math.min(0, Math.max(viewport.offsetWidth - mapImage.naturalWidth * currentScale, posX));
-    } else { // 画像がビューポート幅より小さい場合は中央寄せ
-        posX = (viewport.offsetWidth - mapImage.naturalWidth * currentScale) / 2;
-    }
-    if (mapImage.naturalHeight * currentScale > viewport.offsetHeight) {
-        posY = Math.min(0, Math.max(viewport.offsetHeight - mapImage.naturalHeight * currentScale, posY));
-    } else { // 画像がビューポート高より小さい場合は中央寄せ
-        posY = (viewport.offsetHeight - mapImage.naturalHeight * currentScale) / 2;
+function updateTilesContainerTransform() {
+    // 境界チェック (タイル全体がビューポートより大きい場合のみ制限)
+    if (TOTAL_IMAGE_WIDTH * currentScale > viewport.offsetWidth) {
+        // 画像の右端がビューポートの右端より左に来ないように、かつ画像の左端がビューポートの左端より右に来ないように
+        posX = Math.min(0, Math.max(viewport.offsetWidth - TOTAL_IMAGE_WIDTH * currentScale, posX));
+    } else { // 全体画像がビューポート幅より小さい場合は中央寄せ
+        posX = (viewport.offsetWidth - TOTAL_IMAGE_WIDTH * currentScale) / 2;
     }
 
-    mapImage.style.transform = `translate(${posX}px, ${posY}px) scale(${currentScale})`;
+    if (TOTAL_IMAGE_HEIGHT * currentScale > viewport.offsetHeight) {
+        posY = Math.min(0, Math.max(viewport.offsetHeight - TOTAL_IMAGE_HEIGHT * currentScale, posY));
+    } else { // 全体画像がビューポート高より小さい場合は中央寄せ
+        posY = (viewport.offsetHeight - TOTAL_IMAGE_HEIGHT * currentScale) / 2;
+    }
+
+    tilesContainer.style.transform = `translate(${posX}px, ${posY}px) scale(${currentScale})`;
 }
 
-// --- ズーム処理の共通関数 ---
 function applyZoom(scaleChangeFactor, zoomCenterX, zoomCenterY) {
-    // zoomCenterX, zoomCenterY はビューポートの左上を原点とする座標
+    const pointX = (zoomCenterX - posX) / currentScale;
+    const pointY = (zoomCenterY - posY) / currentScale;
 
-    const pointX = (zoomCenterX - posX) / currentScale; // ズーム中心の画像上の相対X座標
-    const pointY = (zoomCenterY - posY) / currentScale; // ズーム中心の画像上の相対Y座標
-
-    let newScale = currentScale * (1 + scaleChangeFactor); // 乗算でスケール変更
+    let newScale = currentScale * (1 + scaleChangeFactor);
     newScale = Math.max(minScale, Math.min(maxScale, newScale));
 
-    // スケール変更後も、ズーム中心が同じビューポート座標に来るようにposX, posYを調整
     posX = zoomCenterX - pointX * newScale;
     posY = zoomCenterY - pointY * newScale;
     currentScale = newScale;
 
-    updateImageTransform();
+    updateTilesContainerTransform();
 }
 
 // --- パンニング (ドラッグ移動) の実装 (変更なし) ---
@@ -167,7 +206,7 @@ viewport.addEventListener('mousemove', (e) => {
     e.preventDefault();
     posX = e.clientX - startDragX;
     posY = e.clientY - startDragY;
-    updateImageTransform();
+    updateTilesContainerTransform(); // tilesContainerを動かす
 });
 
 viewport.addEventListener('mouseup', () => {
@@ -184,35 +223,30 @@ viewport.addEventListener('mouseleave', () => {
     }
 });
 
-// --- ズーム (マウスホイール) の実装 (共通関数を呼び出すように変更) ---
+// --- ズーム (マウスホイール) の実装 (変更なし、内部でapplyZoomを呼ぶ) ---
 viewport.addEventListener('wheel', (e) => {
     e.preventDefault();
-
     const rect = viewport.getBoundingClientRect();
     const mouseX = e.clientX - rect.left;
     const mouseY = e.clientY - rect.top;
-    
-    const scaleIncrement = e.deltaY < 0 ? zoomStepFactor : -zoomStepFactor; // ホイール方向で増減
-    
+    const scaleIncrement = e.deltaY < 0 ? zoomStepFactor : -zoomStepFactor;
     applyZoom(scaleIncrement, mouseX, mouseY);
 });
 
-// --- ズームボタンのイベントリスナー ---
+// --- ズームボタンのイベントリスナー (変更なし、内部でapplyZoomを呼ぶ) ---
 zoomInButton.addEventListener('click', () => {
-    const centerX = viewport.offsetWidth / 2;  // ビューポート中心をズーム中心に
+    const centerX = viewport.offsetWidth / 2;
     const centerY = viewport.offsetHeight / 2;
     applyZoom(zoomStepFactor, centerX, centerY);
 });
 
 zoomOutButton.addEventListener('click', () => {
-    const centerX = viewport.offsetWidth / 2; // ビューポート中心をズーム中心に
+    const centerX = viewport.offsetWidth / 2;
     const centerY = viewport.offsetHeight / 2;
-    applyZoom(-zoomStepFactor, centerX, centerY); // 負の値でズームアウト
+    applyZoom(-zoomStepFactor, centerX, centerY);
 });
 
-// 初期表示
-// mapImage.onload が非同期なので、確実にサイズ取得後に updateImageTransform が呼ばれるようにする
-// (onload 内で初期呼び出し済み)
+// 初期表示は全タイルロード後に initializeMapDisplay() 内で行われる
     </script>
 </body>
 </html>
