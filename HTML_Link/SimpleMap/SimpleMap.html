@@ -137,29 +137,27 @@
 
        // ★★★ initializeMapDisplay 関数を修正 ★★★
         function initializeMapDisplay() {
-            // ★変更: 初期表示スケールを、タイルマップ全体の横幅の1/3が表示されるように設定
-            if (TOTAL_IMAGE_WIDTH > 0) {
-                // ビューポートに表示される地図の幅が、元々の地図全体の横幅の1/3になるようにする
-                // ということは、スケール自体を 1/3 (約0.333...) に設定する
-                currentScale = 1 / 3;
+            // 目標とする初期表示幅 (タイルマップ全体がこの幅で見えるようにスケールを調整)
+            const targetInitialDisplayWidth = 2000; 
+            
+            if (TOTAL_IMAGE_WIDTH > 0) { // TOTAL_IMAGE_WIDTHが0でないことを確認
+                currentScale = targetInitialDisplayWidth / TOTAL_IMAGE_WIDTH;
             } else {
                 currentScale = 1.0; // エラーケースのデフォルト値
                 console.warn("TOTAL_IMAGE_WIDTH is 0, defaulting scale to 1.0. Check TILE_COLS and TILE_WIDTH_PX.");
             }
 
             // 計算されたスケールが定義済みのminScale/maxScaleの範囲に収まるように調整
-            // 例えば、minScaleが0.5で、1/3 (約0.333) がminScaleより小さい場合、currentScaleはminScale (0.5) になります。
             currentScale = Math.max(minScale, Math.min(maxScale, currentScale));
 
             // 初期位置: 全体図の左下端がビューポートの左下端に表示されるように設定
-            // (このロジックは変更なし、新しいcurrentScaleで再計算されます)
-            posX = 0; 
-            posY = viewport.offsetHeight - (TOTAL_IMAGE_HEIGHT * currentScale); 
+            posX = 0; // タイルマップの左端をビューポートの左端に合わせる
+            posY = viewport.offsetHeight - (TOTAL_IMAGE_HEIGHT * currentScale); // タイルマップの下端をビューポートの下端に合わせる
             
             console.log(
-                `InitializeMapDisplay: Scale set to 1/3 of TotalWidth (approx ${ (1/3).toFixed(3)}), ` +
+                `InitializeMapDisplay: TargetDisplayWidth=${targetInitialDisplayWidth}, ` +
                 `TotalImageSize=(${TOTAL_IMAGE_WIDTH}x${TOTAL_IMAGE_HEIGHT}), ` +
-                `FinalInitialScale=${currentScale.toFixed(3)}, ` + // min/maxScaleで調整後の最終的な初期スケール
+                `InitialScale=${currentScale.toFixed(3)}, ` +
                 `InitialPos=(${posX.toFixed(1)},${posY.toFixed(1)})`
             );
             updateTilesContainerTransform();
