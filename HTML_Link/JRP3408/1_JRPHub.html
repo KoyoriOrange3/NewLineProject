@@ -1,16 +1,99 @@
 <!DOCTYPE html>
-<html>
-<head><title> JRPHub1 </title></head>
+<html lang="ja"> <head>
+    <meta charset="UTF-8"> <title>北海道編 - Japan Railway Project 3408</title> <style>
+        /* 全体のスタイル */
+        body {
+            font-family: 'Helvetica Neue', Arial, "Hiragino Kaku Gothic ProN", "Hiragino Sans", Meiryo, sans-serif; /* モダンで読みやすいフォント群 */
+            line-height: 1.7; /* 行間 */
+            margin: 0;
+            padding: 0;
+            background-color: #f0f4f8; /* 薄いブルーグレーの背景 */
+            color: #333; /* 標準の文字色 */
+        }
+
+        /* コンテンツ全体を囲むコンテナ */
+        .container {
+            max-width: 800px; /* 最大幅 */
+            margin: 30px auto; /* 上下にマージン、左右中央揃え */
+            padding: 25px 35px; /* 内側の余白 */
+            background-color: #ffffff; /* コンテンツエリアの背景は白 */
+            border-radius: 10px; /* 角を丸く */
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.08); /* 影をつけて立体感を出す */
+        }
+
+        /* ページヘッダー（タイトル部分） */
+        .page-header {
+            text-align: center; /* タイトルを中央揃えに */
+            margin-bottom: 30px;
+        }
+
+        .page-header h1 {
+            font-size: 2em; /* メインタイトル */
+            color: #1f3b5a; /* 濃い落ち着いた青 */
+            margin-bottom: 5px;
+            font-weight: 600;
+        }
+        .page-header p { /* サブタイトル（「このページのコンテンツ」） */
+            font-size: 1.1em;
+            color: #5a728c; /* やや薄めの青系グレー */
+            margin-top: 0;
+        }
+
+        /* コンテンツリストのスタイル */
+        .content-list {
+            list-style-type: none; /* リストのデフォルトの点を消す */
+            padding-left: 0; /* 左側のパディングをリセット */
+        }
+
+        .content-list li {
+            margin-bottom: 12px; /* 各リスト項目の下のマージン */
+            border-left: 5px solid #5c9ce6; /* 左側にブルーのアクセントボーダー */
+            background-color: #f8f9fa; /* 各項目の背景を薄いグレーに */
+            transition: background-color 0.25s ease, transform 0.25s ease; /* ホバー時のアニメーション */
+            border-radius: 0 5px 5px 0; /* 右側の角を少し丸く */
+        }
+        
+        .content-list li:hover {
+            background-color: #e9f2fb; /* ホバー時の背景色 */
+            transform: translateX(5px); /* ホバー時に少し右に動く */
+        }
+
+        .content-list a, .content-list .list-item-text { /* .list-item-text も残しておきます */
+            display: block; /* リンクやテキストがli要素全体に広がるように */
+            padding: 12px 20px; /* 内側の余白 */
+            text-decoration: none;
+            color: #345E8D; /* リンクの色 */
+            font-size: 1.1em;
+            font-weight: 500; /* やや太字 */
+        }
+
+        .content-list a:hover {
+            color: #1c334d; /* リンクのホバー時の色 */
+        }
+        
+        /* リンクではないリスト項目 (今回は該当なしですが、汎用性のため残します) */
+        .content-list .list-item-text {
+            color: #495057; 
+            cursor: default; 
+        }
+    </style>
+</head>
 <body>
-このページのコンテンツ<br>
-<a href="./HokkaidoLine/200Takasu.html">1.鷹栖線</a><br>
-<a href="./HokkaidoLine/201Asahikawa.html">2.旭川電気軌道旭川空港線</a><br>
-<a href="./HokkaidoLine/202Rausu.html">3.知床線</a><br>
-<a href="./HokkaidoLine/204Shakotan.html">4.積丹線/赤井川線</a><br>
-<a href="./HokkaidoLine/205-1Shimamaki.html">5.島牧線</a><br>
-<a href="./HokkaidoLine/205-2Hiyama.html">6.檜山本線</a><br>
-<a href="./HokkaidoLine/205-3Assabu.html">7.厚沢部線</a><br>
-<a href="./HokkaidoLine/128Toi.html">8.戸井線/川汲線</a><br>
-<a href="./HokkaidoLine/203Shinotsu.html">9.篠津線</a>
+    <div class="container">
+        <div class="page-header">
+            <h1>北海道編</h1> <p>このページのコンテンツ</p> </div>
+
+        <ul class="content-list">
+            <li><a href="./HokkaidoLine/200Takasu.html">1. 鷹栖線</a></li>
+            <li><a href="./HokkaidoLine/201Asahikawa.html">2. 旭川電気軌道旭川空港線</a></li>
+            <li><a href="./HokkaidoLine/202Rausu.html">3. 知床線</a></li>
+            <li><a href="./HokkaidoLine/204Shakotan.html">4. 積丹線/赤井川線</a></li>
+            <li><a href="./HokkaidoLine/205-1Shimamaki.html">5. 島牧線</a></li>
+            <li><a href="./HokkaidoLine/205-2Hiyama.html">6. 檜山本線</a></li>
+            <li><a href="./HokkaidoLine/205-3Assabu.html">7. 厚沢部線</a></li>
+            <li><a href="./HokkaidoLine/128Toi.html">8. 戸井線/川汲線</a></li>
+            <li><a href="./HokkaidoLine/203Shinotsu.html">9. 篠津線</a></li>
+        </ul>
+    </div>
 </body>
 </html>
