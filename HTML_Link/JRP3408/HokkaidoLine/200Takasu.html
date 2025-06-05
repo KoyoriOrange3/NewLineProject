@@ -1,9 +1,112 @@
 <!DOCTYPE html>
-<html>
-<head><title> 鷹栖線 </title></head>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <title>鷹栖線 - 北海道編</title>
+    <style>
+        /* 全体のスタイル (前回テンプレートで提供したものと同じ) */
+        body {
+            font-family: 'Helvetica Neue', Arial, "Hiragino Kaku Gothic ProN", "Hiragino Sans", Meiryo, sans-serif;
+            line-height: 1.7;
+            margin: 0;
+            padding: 0;
+            background-color: #f0f4f8;
+            color: #333;
+        }
+        .container {
+            max-width: 900px;
+            margin: 30px auto;
+            padding: 25px 35px;
+            background-color: #ffffff;
+            border-radius: 10px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.08);
+        }
+        .page-header {
+            text-align: center; /* ページタイトルを中央揃え */
+            margin-bottom: 30px; /* コンテンツとの適切な間隔 */
+            padding-bottom: 15px;
+            border-bottom: 3px solid #4a76a8; /* ヘッダー下部の区切り線 */
+        }
+        .page-header h1 {
+            font-size: 2.2em;
+            color: #1f3b5a;
+            margin: 0;
+            font-weight: 600;
+        }
+        .content-article {
+            /* 今回は1セクションなので特に不要 */
+        }
+        .content-section {
+            margin-bottom: 25px; /* フッターとの間隔 */
+            /* 1セクションのみなので、下の破線ボーダーは不要、または:last-of-typeで消える */
+        }
+        .content-section:last-of-type { /* セクションが1つでもこれが適用される */
+            border-bottom: none;
+            margin-bottom: 20px;
+        }
+        .content-section h2 { /* セクションタイトル */
+            font-size: 1.7em;
+            color: #2c4a6b;
+            margin-top: 0;
+            margin-bottom: 15px; /* タイトルと画像の間のマージン */
+            font-weight: 600;
+            text-align: left; /* セクションタイトルは左揃えに */
+        }
+        .content-section h2 small { /* 区間名など */
+            display: block;
+            font-size: 0.75em;
+            color: #5a728c;
+            font-weight: normal;
+            margin-top: 5px;
+        }
+        .image-wrapper {
+            text-align: center; /* 画像を中央揃え */
+            margin-top: 10px; /* セクションタイトルからのマージン */
+            margin-bottom: 20px;
+        }
+        .image-wrapper img {
+            max-width: 100%;
+            height: auto;
+            border-radius: 8px;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+            border: 1px solid #ddd;
+            padding: 4px;
+            background-color: #fff;
+        }
+        .footer-credits {
+            margin-top: 40px;
+            padding-top: 20px;
+            border-top: 1px solid #d1d9e6;
+            font-size: 0.9em;
+            color: #607d8b;
+            text-align: center;
+        }
+        .footer-credits a {
+            color: #345E8D;
+            font-weight: normal;
+        }
+        .footer-credits a:hover {
+            color: #1c334d;
+        }
+    </style>
+</head>
 <body>
-<b>鷹栖線</b> 新旭川～鷹栖 <br>
-<img src="../../../Image/JRP_Hokkaido/200_Takasu.jpg" width="50%" height="50%">　<br>
-<a href="https://www.openstreetmap.org/copyright">©OpenStreetMap contributors</a> <br>
+    <div class="container">
+        <header class="page-header">
+            <h1>鷹栖線</h1> </header>
+
+        <article class="content-article">
+            <section class="content-section">
+                <h2>路線概要 <small>新旭川～鷹栖</small></h2> 
+                <div class="image-wrapper">
+                    <img src="../../../Image/JRP_Hokkaido/200_Takasu.jpg" alt="鷹栖線 (新旭川～鷹栖) の路線図イメージ">
+                </div>
+                </section>
+        </article>
+
+        <footer class="footer-credits">
+            <p><a href="https://www.openstreetmap.org/copyright">©OpenStreetMap contributors</a></p>
+        </footer>
+    </div>
 </body>
 </html>
