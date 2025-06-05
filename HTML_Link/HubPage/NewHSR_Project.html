@@ -1,11 +1,102 @@
 <!DOCTYPE html>
-<html>
-<head><title> NewHSRLineProject </title></head>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8"> <title>新・新幹線基本計画シリーズ - ハブページ</title> <script async src="https://www.googletagmanager.com/gtag/js?id=G-NPZCY0Z7R0"></script>
+    <script>
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){dataLayer.push(arguments);}
+      gtag('js', new Date());
+
+      gtag('config', 'G-NPZCY0Z7R0');
+    </script>
+    <style>
+        /* 全体のスタイル */
+        body {
+            font-family: 'Helvetica Neue', Arial, "Hiragino Kaku Gothic ProN", "Hiragino Sans", Meiryo, sans-serif; /* モダンで読みやすいフォント群 */
+            line-height: 1.7; /* 行間 */
+            margin: 0;
+            padding: 0;
+            background-color: #f0f4f8; /* 薄いブルーグレーの背景 */
+            color: #333; /* 標準の文字色 */
+        }
+
+        /* コンテンツ全体を囲むコンテナ */
+        .container {
+            max-width: 800px; /* 最大幅 */
+            margin: 30px auto; /* 上下にマージン、左右中央揃え */
+            padding: 25px 35px; /* 内側の余白 */
+            background-color: #ffffff; /* コンテンツエリアの背景は白 */
+            border-radius: 10px; /* 角を丸く */
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.08); /* 影をつけて立体感を出す */
+        }
+
+        /* ページヘッダー（タイトル部分） */
+        .page-header {
+            text-align: center; /* タイトルを中央揃えに */
+            margin-bottom: 30px;
+        }
+
+        .page-header h1 {
+            font-size: 2em; /* メインタイトル */
+            color: #1f3b5a; /* 濃い落ち着いた青 */
+            margin-bottom: 5px;
+            font-weight: 600;
+        }
+        .page-header p { /* サブタイトル（「このページのコンテンツ」） */
+            font-size: 1.1em;
+            color: #5a728c; /* やや薄めの青系グレー */
+            margin-top: 0;
+        }
+
+        /* コンテンツリストのスタイル */
+        .content-list {
+            list-style-type: none; /* リストのデフォルトの点を消す */
+            padding-left: 0; /* 左側のパディングをリセット */
+        }
+
+        .content-list li {
+            margin-bottom: 12px; /* 各リスト項目の下のマージン */
+            border-left: 5px solid #5c9ce6; /* 左側にブルーのアクセントボーダー */
+            background-color: #f8f9fa; /* 各項目の背景を薄いグレーに */
+            transition: background-color 0.25s ease, transform 0.25s ease; /* ホバー時のアニメーション */
+            border-radius: 0 5px 5px 0; /* 右側の角を少し丸く */
+        }
+        
+        .content-list li:hover {
+            background-color: #e9f2fb; /* ホバー時の背景色 */
+            transform: translateX(5px); /* ホバー時に少し右に動く */
+        }
+
+        .content-list a, .content-list .list-item-text {
+            display: block; /* リンクやテキストがli要素全体に広がるように */
+            padding: 12px 20px; /* 内側の余白 */
+            text-decoration: none;
+            color: #345E8D; /* リンクの色 */
+            font-size: 1.1em;
+            font-weight: 500; /* やや太字 */
+        }
+
+        .content-list a:hover {
+            color: #1c334d; /* リンクのホバー時の色 */
+        }
+        
+        /* リンクではないリスト項目 (例: 「2.準主要路線シリーズ」) */
+        .content-list .list-item-text {
+            color: #495057; /* リンクでない項目は少し濃いグレーで */
+            cursor: default; /* クリックできないことを示すカーソル */
+        }
+    </style>
+</head>
 <body>
-このページのコンテンツ<br>
-<a href="../NSP/1_MainHub.html">1.主要路線シリーズ</a><br>
-2.準主要路線シリーズ<br>
-3.補助路線シリーズ<br>
-4.北海道振興線シリーズ
+    <div class="container">
+        <div class="page-header">
+            <h1>新・新幹線基本計画シリーズ</h1> <p>このページのコンテンツ</p> </div>
+
+        <ul class="content-list">
+            <li><a href="../NSP/1_MainHub.html">1. 主要路線シリーズ</a></li>
+            <li><span class="list-item-text">2. 準主要路線シリーズ</span></li> <li><span class="list-item-text">3. 補助路線シリーズ</span></li>
+            <li><span class="list-item-text">4. 北海道振興線シリーズ</span></li>
+        </ul>
+    </div>
 </body>
 </html>
