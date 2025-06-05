@@ -1,32 +1,115 @@
 <!DOCTYPE html>
-<html>
-<head><title> MainHub </title></head>
+<html lang="ja"> <head>
+    <meta charset="UTF-8"> <title>主要路線シリーズ - 新・新幹線基本計画</title> <style>
+        /* 全体のスタイル */
+        body {
+            font-family: 'Helvetica Neue', Arial, "Hiragino Kaku Gothic ProN", "Hiragino Sans", Meiryo, sans-serif; /* モダンで読みやすいフォント群 */
+            line-height: 1.7; /* 行間 */
+            margin: 0;
+            padding: 0;
+            background-color: #f0f4f8; /* 薄いブルーグレーの背景 */
+            color: #333; /* 標準の文字色 */
+        }
+
+        /* コンテンツ全体を囲むコンテナ */
+        .container {
+            max-width: 800px; /* 最大幅 */
+            margin: 30px auto; /* 上下にマージン、左右中央揃え */
+            padding: 25px 35px; /* 内側の余白 */
+            background-color: #ffffff; /* コンテンツエリアの背景は白 */
+            border-radius: 10px; /* 角を丸く */
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.08); /* 影をつけて立体感を出す */
+        }
+
+        /* ページヘッダー（タイトル部分） */
+        .page-header {
+            text-align: center; /* タイトルを中央揃えに */
+            margin-bottom: 30px;
+        }
+
+        .page-header h1 {
+            font-size: 2em; /* メインタイトル */
+            color: #1f3b5a; /* 濃い落ち着いた青 */
+            margin-bottom: 5px;
+            font-weight: 600;
+        }
+        .page-header p { /* サブタイトル（「このページのコンテンツ」） */
+            font-size: 1.1em;
+            color: #5a728c; /* やや薄めの青系グレー */
+            margin-top: 0;
+        }
+
+        /* コンテンツリストのスタイル */
+        .content-list {
+            list-style-type: none; /* リストのデフォルトの点を消す */
+            padding-left: 0; /* 左側のパディングをリセット */
+        }
+
+        .content-list li {
+            margin-bottom: 12px; /* 各リスト項目の下のマージン */
+            border-left: 5px solid #5c9ce6; /* 左側にブルーのアクセントボーダー */
+            background-color: #f8f9fa; /* 各項目の背景を薄いグレーに */
+            transition: background-color 0.25s ease, transform 0.25s ease; /* ホバー時のアニメーション */
+            border-radius: 0 5px 5px 0; /* 右側の角を少し丸く */
+        }
+        
+        .content-list li:hover {
+            background-color: #e9f2fb; /* ホバー時の背景色 */
+            transform: translateX(5px); /* ホバー時に少し右に動く */
+        }
+
+        .content-list a, .content-list .list-item-text {
+            display: block; /* リンクやテキストがli要素全体に広がるように */
+            padding: 12px 20px; /* 内側の余白 */
+            text-decoration: none;
+            color: #345E8D; /* リンクの色 */
+            font-size: 1.1em;
+            font-weight: 500; /* やや太字 */
+        }
+
+        .content-list a:hover {
+            color: #1c334d; /* リンクのホバー時の色 */
+        }
+        
+        /* リンクではないリスト項目 */
+        .content-list .list-item-text {
+            color: #495057; /* リンクでない項目は少し濃いグレーで */
+            cursor: default; /* クリックできないことを示すカーソル */
+        }
+    </style>
+</head>
 <body>
-このページのコンテンツ<br>
-<a href="./MainLine/001tokaidoHSR.html">1.東海道新幹線 (リメイク)</a><br>
-<a href="./MainLine/002SanyoHSR.html">2.山陽新幹線 (リニア)</a><br>
-3.九州新幹線<br>
-4.東北新幹線<br>
-<a href="./MainLine/005HokkaidoHSR.html">5.北海道新幹線 (旭川延伸部)</a><br>
-<a href="./MainLine/006ChuouHSR.html">6.中央新幹線</a><br>
-<a href="./MainLine/007ShikokuHSR.html">7.四国新幹線</a><br>
-<a href="./MainLine/008HokurikuHSR.html">8.北陸新幹線</a><br>
-<a href="./MainLine/009UetsuHSR.html">9.羽越新幹線</a><br>
-<a href="./MainLine/010OuuHSR.html">10.奥羽新幹線</a><br>
-<a href="./MainLine/011JoetsuHSR.html">11.上越新幹線</a><br>
-<a href="./MainLine/012San-inHSR.html">12.山陰新幹線</a><br>
-<a href="./MainLine/013DoutouHSR.html">13.道東新幹線</a><br>
-<a href="./MainLine/014IburiHSR.html">14.北海道南回り(胆振)新幹線</a><br>
-<a href="./MainLine/015Ban-etsuHSR.html">15.磐越新幹線</a><br>
-<a href="./MainLine/016JobanHSR.html">16.常磐新幹線</a><br>
-<a href="./MainLine/017SinonoiHSR.html">17.篠ノ井新幹線</a><br>
-<a href="./MainLine/018Hoku_ChuHSR.html">18.北陸中京新幹線</a><br>
-<a href="./MainLine/019MaiduruHSR.html">19.舞鶴新幹線<br>
-<a href="./MainLine/020KiseiHSR.html">20.紀勢新幹線<br>
-<a href="./MainLine/021HakubiHSR.html">21.中国横断新幹線<br>
-<a href="./MainLine/022Shikoku-Zyudan.html">22.四国横断新幹線<br>
-<a href="./MainLine/023Kyudai.html">23.久大新幹線<br>
-<a href="./MainLine/024Nishi-Kyusyu.html">24.西九州新幹線<br>
-<a href="./MainLine/025Higashi-Kyusyu.html">25.東九州新幹線
+    <div class="container">
+        <div class="page-header">
+            <h1>主要路線シリーズ</h1> <p>このページのコンテンツ</p> </div>
+
+        <ul class="content-list">
+            <li><a href="./MainLine/001tokaidoHSR.html">1. 東海道新幹線 (リメイク)</a></li>
+            <li><a href="./MainLine/002SanyoHSR.html">2. 山陽新幹線 (リニア)</a></li>
+            <li><span class="list-item-text">3. 九州新幹線</span></li>
+            <li><span class="list-item-text">4. 東北新幹線</span></li>
+            <li><a href="./MainLine/005HokkaidoHSR.html">5. 北海道新幹線 (旭川延伸部)</a></li>
+            <li><a href="./MainLine/006ChuouHSR.html">6. 中央新幹線</a></li>
+            <li><a href="./MainLine/007ShikokuHSR.html">7. 四国新幹線</a></li>
+            <li><a href="./MainLine/008HokurikuHSR.html">8. 北陸新幹線</a></li>
+            <li><a href="./MainLine/009UetsuHSR.html">9. 羽越新幹線</a></li>
+            <li><a href="./MainLine/010OuuHSR.html">10. 奥羽新幹線</a></li>
+            <li><a href="./MainLine/011JoetsuHSR.html">11. 上越新幹線</a></li>
+            <li><a href="./MainLine/012San-inHSR.html">12. 山陰新幹線</a></li>
+            <li><a href="./MainLine/013DoutouHSR.html">13. 道東新幹線</a></li>
+            <li><a href="./MainLine/014IburiHSR.html">14. 北海道南回り(胆振)新幹線</a></li>
+            <li><a href="./MainLine/015Ban-etsuHSR.html">15. 磐越新幹線</a></li>
+            <li><a href="./MainLine/016JobanHSR.html">16. 常磐新幹線</a></li>
+            <li><a href="./MainLine/017SinonoiHSR.html">17. 篠ノ井新幹線</a></li>
+            <li><a href="./MainLine/018Hoku_ChuHSR.html">18. 北陸中京新幹線</a></li>
+            <li><a href="./MainLine/019MaiduruHSR.html">19. 舞鶴新幹線</a></li>
+            <li><a href="./MainLine/020KiseiHSR.html">20. 紀勢新幹線</a></li>
+            <li><a href="./MainLine/021HakubiHSR.html">21. 中国横断新幹線</a></li>
+            <li><a href="./MainLine/022Shikoku-Zyudan.html">22. 四国横断新幹線</a></li>
+            <li><a href="./MainLine/023Kyudai.html">23. 久大新幹線</a></li>
+            <li><a href="./MainLine/024Nishi-Kyusyu.html">24. 西九州新幹線</a></li>
+            <li><a href="./MainLine/025Higashi-Kyusyu.html">25. 東九州新幹線</a></li>
+        </ul>
+    </div>
 </body>
 </html>
