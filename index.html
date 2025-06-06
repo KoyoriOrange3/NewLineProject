@@ -220,7 +220,6 @@
     document.addEventListener('DOMContentLoaded', function() {
         
         // --- ▼▼▼ ここで進捗の数値を設定してください ▼▼▼ ---
-        // 例として仮の数値を設定しています。実際の値に更新してください。
         const reachedMunicipalities = 309;      // 到達済自治体の数
         const totalUnreachedMunicipalities = 749; // 全鉄道未到達自治体の数 (元々のターゲット全体の数)
         // --- ▲▲▲ 設定はここまで ▲▲▲
@@ -235,8 +234,6 @@
         if (donutElement && percentageElement && reachedCountElement && totalCountElement) {
             
             // 進捗率の計算
-            // ご指定の「到達済自治体」/「全鉄道未到達自治体」で計算します。
-            // 「全鉄道未到達自治体」は、プロジェクト開始時の全体の母数と解釈して計算しています。
             const progressRate = (totalUnreachedMunicipalities > 0) ? (reachedMunicipalities / totalUnreachedMunicipalities) : 0;
             const percentage = Math.floor(progressRate * 100);
 
