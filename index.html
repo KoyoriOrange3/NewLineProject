@@ -13,80 +13,69 @@
 <style>
     /* 全体のスタイル */
     body {
-        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; /* モダンで読みやすいフォント */
-        line-height: 1.7; /* 行間を少し広げて読みやすく */
+        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        line-height: 1.7;
         margin: 0;
         padding: 0;
-        background-color: #f0f2f5; /* ごく薄いグレーの背景 */
-        color: #333; /* 標準の文字色 */
+        background-color: #f0f2f5;
+        color: #333;
     }
 
     /* ページコンテンツを中央に配置し、最大幅を設定 */
     .container {
         max-width: 900px;
-        margin: 25px auto; /* 上下にマージン、左右は自動で中央揃え */
+        margin: 25px auto;
         padding: 25px 30px;
-        background-color: #ffffff; /* コンテンツエリアの背景は白 */
-        border-radius: 8px; /* 角を少し丸くする */
-        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08); /* subtle shadow */
+        background-color: #ffffff;
+        border-radius: 8px;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
     }
 
-    /* ページ全体のタイトル (現在の最初の<b>タグを想定) */
-    /* 推奨: この部分は<h1>タグに変更すると、より意味的に適切です */
-    .page-title { /* HTMLで最初の<b>を<h1 class="page-title">に変更することを推奨 */
-        font-size: 2.2em; /* 少し大きめのフォントサイズ */
-        color: #1a2b4d; /* 濃いネイビーブルー */
+    /* ページ全体のタイトル */
+    .page-title {
+        font-size: 2.2em;
+        color: #1a2b4d;
         margin-bottom: 20px;
         padding-bottom: 10px;
-        border-bottom: 3px solid #4a90e2; /* 明るいブルーのアクセント */
+        border-bottom: 3px solid #4a90e2;
         font-weight: 600;
     }
 
-    /* セクションタイトル (現在の他の<b>タグを想定) */
-    /* 推奨: これらの<b>タグは<h2>タグなどに変更すると、より意味的に適切です */
-    .section-title { /* HTMLで<b>を<h2 class="section-title">に変更することを推奨 */
+    /* セクションタイトル */
+    .section-title {
         font-size: 1.6em;
-        color: #333a45; /* やや濃いグレー */
-        margin-top: 35px; /* セクション間のスペース */
+        color: #333a45;
+        margin-top: 35px;
         margin-bottom: 15px;
         font-weight: 600;
     }
     
     /* リンクのスタイル */
     a {
-        color: #007bff; /* 標準的なリンク色 (ブルー) */
-        text-decoration: none; /* 下線をデフォルトで消す */
+        color: #007bff;
+        text-decoration: none;
         font-weight: 500;
     }
 
     a:hover, a:focus {
-        color: #0056b3; /* ホバー時の色を少し濃く */
-        text-decoration: underline; /* ホバー時に下線を表示 */
+        color: #0056b3;
+        text-decoration: underline;
     }
 
-    /* <br>で区切られたリスト風の箇所 (リンクなど) */
-    /* 推奨: これらの箇所は<ul><li>タグでマークアップすると、より適切にスタイリングできます */
-    .content-links a, .status-list p, .history-list p { /* HTML構造を変更した場合のクラス例 */
-        display: block; /* 各項目をブロック要素に */
-        margin-bottom: 8px; /* 各項目の下に少しマージン */
+    /* リスト風の箇所 */
+    .content-links a, .status-list p, .history-list p {
+        display: block;
+        margin-bottom: 8px;
     }
     .content-links a {
-        margin-left: 15px; /* 少しインデント */
+        margin-left: 15px;
     }
      .status-list p, .history-list p {
         margin-left: 15px;
         margin-bottom: 5px;
     }
-
-
-    /* 更新履歴のスタイル（もしul/li構造にした場合、より詳細に設定可能） */
-    .history-list {
-        /* 例: list-style-type: none; padding-left: 0; */
-    }
-    .history-list li { /* HTMLを<li>でマークアップした場合 */
-        /* margin-bottom: 5px; */
-    }
-    .history-date { /* 日付部分を<span class="history-date">で囲むと良いでしょう */
+    
+    .history-date {
         font-weight: bold;
         color: #555;
         margin-right: 10px;
@@ -96,11 +85,77 @@
     .footer-credits {
         margin-top: 40px;
         padding-top: 20px;
-        border-top: 1px solid #e0e0e0; /* 薄い区切り線 */
+        border-top: 1px solid #e0e0e0;
         font-size: 0.9em;
-        color: #667788; /* 少し落ち着いた色 */
+        color: #667788;
         text-align: center;
     }
+
+    /* --- ▼▼▼ 進捗表示用の新しいCSS ▼▼▼ --- */
+    .progress-section {
+        padding: 20px;
+        background-color: #f8f9fa; /* セクションの背景色 */
+        border-radius: 8px;
+        border: 1px solid #e9ecef;
+    }
+    .progress-container {
+        display: flex;
+        align-items: center;
+        gap: 25px; /* グラフと数値の間のスペース */
+    }
+    .progress-donut {
+        /* CSSカスタムプロパティ（変数値）を定義 */
+        --percentage: 0%;
+        --donut-size: 130px; /* ドーナツのサイズ */
+        --donut-thickness: 18px; /* ドーナツの太さ */
+        --color-progress: #007bff; /* 進捗部分の色 (青) */
+        --color-remaining: #e9ecef; /* 残り部分の色 (薄いグレー) */
+        
+        width: var(--donut-size);
+        height: var(--donut-size);
+        border-radius: 50%;
+        /* conic-gradientでドーナツグラフを描画 */
+        background: conic-gradient(
+            var(--color-progress) 0% var(--percentage), 
+            var(--color-remaining) var(--percentage) 100%
+        );
+        position: relative;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        flex-shrink: 0; /* コンテナが縮んでもドーナツのサイズを維持 */
+        transition: background 0.5s ease-in-out; /* グラフの変化をアニメーション */
+    }
+    /* ドーナツの穴を疑似要素で作成 */
+    .progress-donut::before {
+        content: '';
+        position: absolute;
+        background: #ffffff; /* 親の.containerの背景色と同じ */
+        border-radius: 50%;
+        /* 穴のサイズを計算で求める */
+        width: calc(var(--donut-size) - (var(--donut-thickness) * 2));
+        height: calc(var(--donut-size) - (var(--donut-thickness) * 2));
+    }
+    .progress-percentage {
+        position: relative; /* ::before疑似要素より手前に表示 */
+        z-index: 1;
+        font-size: 1.8em;
+        font-weight: 600;
+        color: #1a2b4d;
+    }
+    .progress-details p {
+        margin: 8px 0;
+        font-size: 1.1em;
+    }
+    .progress-label {
+        color: #495057; /* ラベルの色 */
+    }
+    .progress-value {
+        font-weight: bold;
+        color: #000; /* 数値の色 */
+        margin-left: 8px;
+    }
+    /* --- ▲▲▲ ここまで進捗表示用のCSS ▲▲▲ --- */
 </style>
 </head>
 <body>
@@ -109,14 +164,13 @@
         <b class="page-title">架空鉄道倉庫</b>
         <span style="display:block; margin-bottom:15px;">いろいろ</span><br> 
 
-
         <b class="section-title">コンテンツ</b> 
         <div class="content-links">
             <a href="./HTML_Link/HubPage/NewHSR_Project.html">新･新幹線基本計画シリーズ</a>
             <a href="./HTML_Link/HubPage/Project3408.html">Japan Railway 3408 Project</a>
             <a href="./HTML_Link/Search/Search.html">最短経路探索[テスト]</a>
             <a href="./HTML_Link/SimpleMap/SimpleMap.html">Japan Raiway 3408 Project 路線図</a>
-          <span>※私鉄は最小限の記載,スマホからのアクセスは非推奨</span> <br>
+         <span>※私鉄は最小限の記載,スマホからのアクセスは非推奨</span> <br>
         </div>
         <br>
 
@@ -127,6 +181,24 @@
         </div>
         <br> 
         
+        <b class="section-title">Japan Railway 3408 Project 進捗</b>
+        <div class="progress-section">
+            <div class="progress-container">
+                <div class="progress-donut" role="progressbar" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100">
+                    <span class="progress-percentage">0%</span>
+                </div>
+                <div class="progress-details">
+                    <p>
+                        <span class="progress-label">到達済自治体:</span>
+                        <span id="reached-count" class="progress-value">0</span>
+                    </p>
+                    <p>
+                        <span class="progress-label">全鉄道未到達自治体:</span>
+                        <span id="total-count" class="progress-value">0</span>
+                    </p>
+                </div>
+            </div>
+        </div>
         <b class="section-title">更新履歴</b>
         <div class="history-list"> <p><span class="history-date">2024.5.6</span> HP作成　新幹線計画：1～15番路線の追加</p>
             <p><span class="history-date">2024.5.13</span> 更新履歴の追加</p>
@@ -141,5 +213,45 @@
             当ページの画像はすべて<a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>の地図を加工し、掲載しています。<br>
             また、一部で<a href="https://maps.gsi.go.jp/">地理院地図</a>の地図も加工し、掲載しています。
         </div>
-    </div> </body>
+    </div> 
+
+    <script>
+    // ページのすべての要素が読み込まれてからスクリプトを実行
+    document.addEventListener('DOMContentLoaded', function() {
+        
+        // --- ▼▼▼ ここで進捗の数値を設定してください ▼▼▼ ---
+        // 例として仮の数値を設定しています。実際の値に更新してください。
+        const reachedMunicipalities = 309;      // 到達済自治体の数
+        const totalUnreachedMunicipalities = 749; // 全鉄道未到達自治体の数 (元々のターゲット全体の数)
+        // --- ▲▲▲ 設定はここまで ▲▲▲
+
+        // HTML要素の取得
+        const donutElement = document.querySelector('.progress-donut');
+        const percentageElement = document.querySelector('.progress-percentage');
+        const reachedCountElement = document.getElementById('reached-count');
+        const totalCountElement = document.getElementById('total-count');
+
+        // 要素がページ上に存在する場合のみ処理を実行
+        if (donutElement && percentageElement && reachedCountElement && totalCountElement) {
+            
+            // 進捗率の計算
+            // ご指定の「到達済自治体」/「全鉄道未到達自治体」で計算します。
+            // 「全鉄道未到達自治体」は、プロジェクト開始時の全体の母数と解釈して計算しています。
+            const progressRate = (totalUnreachedMunicipalities > 0) ? (reachedMunicipalities / totalUnreachedMunicipalities) : 0;
+            const percentage = Math.floor(progressRate * 100);
+
+            // 表示の更新
+            // 1. 数値の表示 (toLocaleString()で3桁区切りのカンマを追加)
+            reachedCountElement.textContent = reachedMunicipalities.toLocaleString();
+            totalCountElement.textContent = totalUnreachedMunicipalities.toLocaleString();
+            
+            // 2. ドーナツグラフと中央のパーセンテージの表示
+            // CSSのカスタムプロパティ(--percentage)を更新してグラフを動かす
+            donutElement.style.setProperty('--percentage', percentage + '%'); 
+            donutElement.setAttribute('aria-valuenow', percentage); // アクセシビリティのため
+            percentageElement.textContent = percentage + '%';
+        }
+    });
+    </script>
+    </body>
 </html>
