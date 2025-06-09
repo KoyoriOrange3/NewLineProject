@@ -1,0 +1,275 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <title>ブロック崩しゲーム</title>
+    <style>
+        body {
+            font-family: 'Helvetica Neue', Arial, sans-serif;
+            background-color: #f0f4f8;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            flex-direction: column;
+            margin: 0;
+            padding-top: 20px;
+        }
+        h1 {
+            color: #1f3b5a;
+        }
+        canvas {
+            background: #e9f2fb;
+            display: block;
+            border-radius: 8px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+        }
+        #game-info {
+            margin-top: 15px;
+            font-size: 1.2em;
+            color: #333;
+        }
+        #start-button, #restart-button {
+            margin-top: 15px;
+            padding: 10px 20px;
+            font-size: 1em;
+            font-weight: bold;
+            color: white;
+            background-color: #007bff;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background-color 0.2s;
+        }
+        #start-button:hover, #restart-button:hover {
+            background-color: #0056b3;
+        }
+        #restart-button {
+            display: none; /* 最初は非表示 */
+        }
+    </style>
+</head>
+<body>
+    <h1>ブロック崩し</h1>
+    <canvas id="gameCanvas" width="480" height="320"></canvas>
+    <div id="game-info">
+        <span>スコア: <span id="score">0</span></span>
+        <span style="margin-left: 20px;">ライフ: <span id="lives">3</span></span>
+    </div>
+    <button id="start-button">スタート</button>
+    <button id="restart-button">もう一度遊ぶ</button>
+
+    <script>
+        // --- ゲーム要素の取得 ---
+        const canvas = document.getElementById('gameCanvas');
+        const ctx = canvas.getContext('2d');
+        const scoreElement = document.getElementById('score');
+        const livesElement = document.getElementById('lives');
+        const startButton = document.getElementById('start-button');
+        const restartButton = document.getElementById('restart-button');
+
+        // --- ゲームの変数設定 ---
+        let ballRadius = 10;
+        let x, y, dx, dy; // ボールの位置と速度
+
+        let paddleHeight = 10;
+        let paddleWidth = 75;
+        let paddleX;
+
+        let brickRowCount = 5;
+        let brickColumnCount = 5;
+        let brickWidth = 75;
+        let brickHeight = 20;
+        let brickPadding = 10;
+        let brickOffsetTop = 30;
+        let brickOffsetLeft = 30;
+        let bricks = [];
+
+        let score = 0;
+        let lives = 3;
+        let gameRunning = false;
+        let animationFrameId;
+
+        // --- 初期化処理 ---
+        function init() {
+            // ボールの初期位置と速度
+            x = canvas.width / 2;
+            y = canvas.height - 30;
+            dx = 2;
+            dy = -2;
+            // パドルの初期位置
+            paddleX = (canvas.width - paddleWidth) / 2;
+            // スコアとライフのリセット
+            score = 0;
+            lives = 3;
+            updateScoreAndLives();
+            // ブロックの生成
+            for (let c = 0; c < brickColumnCount; c++) {
+                bricks[c] = [];
+                for (let r = 0; r < brickRowCount; r++) {
+                    bricks[c][r] = { x: 0, y: 0, status: 1 }; // status: 1=表示, 0=破壊
+                }
+            }
+            // 最初のフレームを描画
+            draw(); 
+        }
+
+        // --- 描画関数 ---
+        function drawBall() {
+            ctx.beginPath();
+            ctx.arc(x, y, ballRadius, 0, Math.PI * 2);
+            ctx.fillStyle = "#0095DD";
+            ctx.fill();
+            ctx.closePath();
+        }
+
+        function drawPaddle() {
+            ctx.beginPath();
+            ctx.rect(paddleX, canvas.height - paddleHeight, paddleWidth, paddleHeight);
+            ctx.fillStyle = "#0095DD";
+            ctx.fill();
+            ctx.closePath();
+        }
+
+        function drawBricks() {
+            for (let c = 0; c < brickColumnCount; c++) {
+                for (let r = 0; r < brickRowCount; r++) {
+                    if (bricks[c][r].status == 1) {
+                        let brickX = (c * (brickWidth + brickPadding)) + brickOffsetLeft;
+                        let brickY = (r * (brickHeight + brickPadding)) + brickOffsetTop;
+                        bricks[c][r].x = brickX;
+                        bricks[c][r].y = brickY;
+                        ctx.beginPath();
+                        ctx.rect(brickX, brickY, brickWidth, brickHeight);
+                        ctx.fillStyle = "#0095DD";
+                        ctx.fill();
+                        ctx.closePath();
+                    }
+                }
+            }
+        }
+
+        function updateScoreAndLives() {
+            scoreElement.textContent = score;
+            livesElement.textContent = lives;
+        }
+
+        // --- 当たり判定 ---
+        function collisionDetection() {
+            for (let c = 0; c < brickColumnCount; c++) {
+                for (let r = 0; r < brickRowCount; r++) {
+                    let b = bricks[c][r];
+                    if (b.status == 1) {
+                        if (x > b.x && x < b.x + brickWidth && y > b.y && y < b.y + brickHeight) {
+                            dy = -dy; // ボールのY方向の速度を反転
+                            b.status = 0; // ブロックを破壊
+                            score++;
+                            updateScoreAndLives();
+                            if (score == brickRowCount * brickColumnCount) {
+                                gameClear();
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        // --- メインのゲームループ ---
+        function draw() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            drawBricks();
+            drawBall();
+            drawPaddle();
+            collisionDetection();
+
+            // 壁との反射
+            if (x + dx > canvas.width - ballRadius || x + dx < ballRadius) {
+                dx = -dx;
+            }
+            if (y + dy < ballRadius) {
+                dy = -dy;
+            } else if (y + dy > canvas.height - ballRadius) {
+                // パドルとの反射
+                if (x > paddleX && x < paddleX + paddleWidth) {
+                    dy = -dy;
+                } else {
+                    // ゲームオーバー処理
+                    lives--;
+                    updateScoreAndLives();
+                    if (!lives) {
+                        gameOver();
+                    } else {
+                        // ライフが残っている場合、ボールとパドルを初期位置に戻す
+                        x = canvas.width / 2;
+                        y = canvas.height - 30;
+                        dx = 2;
+                        dy = -2;
+                        paddleX = (canvas.width - paddleWidth) / 2;
+                    }
+                }
+            }
+            
+            x += dx;
+            y += dy;
+
+            if(gameRunning) {
+                animationFrameId = requestAnimationFrame(draw);
+            }
+        }
+
+        // --- マウス操作 ---
+        document.addEventListener("mousemove", mouseMoveHandler, false);
+        function mouseMoveHandler(e) {
+            let rect = canvas.getBoundingClientRect();
+            let relativeX = e.clientX - rect.left;
+            if (relativeX > 0 && relativeX < canvas.width) {
+                paddleX = relativeX - paddleWidth / 2;
+                // パドルが壁の外に出ないようにする
+                if (paddleX < 0) paddleX = 0;
+                if (paddleX + paddleWidth > canvas.width) paddleX = canvas.width - paddleWidth;
+            }
+        }
+
+        // --- ゲーム制御 ---
+        function startGame() {
+            if (!gameRunning) {
+                gameRunning = true;
+                startButton.style.display = 'none';
+                restartButton.style.display = 'none';
+                init(); // ゲームを初期化して開始
+            }
+        }
+        
+        function stopGame() {
+            gameRunning = false;
+            cancelAnimationFrame(animationFrameId);
+        }
+
+        function gameOver() {
+            stopGame();
+            ctx.font = "24px 'Helvetica Neue'";
+            ctx.fillStyle = "#FF0000";
+            ctx.textAlign = "center";
+            ctx.fillText("GAME OVER", canvas.width / 2, canvas.height / 2);
+            restartButton.style.display = 'inline-block';
+        }
+        
+        function gameClear() {
+            stopGame();
+            ctx.font = "24px 'Helvetica Neue'";
+            ctx.fillStyle = "#0095DD";
+            ctx.textAlign = "center";
+            ctx.fillText("CONGRATULATIONS!", canvas.width / 2, canvas.height / 2);
+            restartButton.style.display = 'inline-block';
+        }
+
+        startButton.addEventListener('click', startGame);
+        restartButton.addEventListener('click', startGame);
+
+        // --- 初期描画 ---
+        // ゲーム開始前に初期状態のオブジェクトを描画しておく
+        drawBricks();
+        drawBall();
+        drawPaddle();
+    </script>
+</body>
+</html>
